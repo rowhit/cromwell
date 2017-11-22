@@ -120,7 +120,7 @@ class OutputEvaluatorSpec extends FlatSpec with Matchers with Mockito {
 
     OutputEvaluator.evaluateOutputs(jobDescriptor, NoIoFunctionSet) match {
       case InvalidJobOutputs(errors) => errors shouldBe NonEmptyList.of(
-        "Invalid expression 1", "Invalid expression 2"
+        "Bad output 'invalid1': Invalid expression 1", "Bad output 'invalid2': Invalid expression 2"
       )
       case _ => fail("Output evaluation should have failed")
     }
