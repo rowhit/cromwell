@@ -100,8 +100,8 @@ class OutputEvaluatorSpec extends FlatSpec with Matchers with Mockito {
 
     OutputEvaluator.evaluateOutputs(jobDescriptor, NoIoFunctionSet) match {
       case ValidJobOutputs(outputs) => outputs shouldBe CallOutputs(Map(
-        jobDescriptor.call.outputPorts.find(_.name == "o1").get -> WomInteger(5),
-        jobDescriptor.call.outputPorts.find(_.name == "o2").get -> WomInteger(5)
+        jobDescriptor.taskCall.outputPorts.find(_.name == "o1").get -> WomInteger(5),
+        jobDescriptor.taskCall.outputPorts.find(_.name == "o2").get -> WomInteger(5)
       ))
       case _ => fail("Failed to evaluate outputs")
     }
