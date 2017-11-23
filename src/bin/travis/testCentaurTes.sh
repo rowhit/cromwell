@@ -35,7 +35,7 @@ docker pull ubuntu:latest
 
 WORKDIR=$(pwd)
 
-sbt assembly
+ENABLE_COVERAGE=true sbt assembly
 CROMWELL_JAR=$(find "$(pwd)/target/scala-2.12" -name "cromwell-*.jar")
 TES_CENTAUR_CONF="$(pwd)/src/bin/travis/resources/tes_centaur.conf"
 cd $WORKDIR
@@ -76,3 +76,7 @@ centaur/test_cromwell.sh \
 -e lots_of_inputs \
 -e call_cache_capoeira_local \
 -e non_root_default_user
+
+sbt coverageReport
+sbt coverageAggregate
+bash <(curl -s https://codecov.io/bash)

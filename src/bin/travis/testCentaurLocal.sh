@@ -78,9 +78,7 @@ printTravisHeartbeat
 set -x
 set -e
 
-docker pull ubuntu:latest
-
-sbt assembly
+ENABLE_COVERAGE=true sbt assembly
 CROMWELL_JAR=$(find "$(pwd)/target/scala-2.12" -name "cromwell-*.jar")
 LOCAL_CONF="$(pwd)/src/bin/travis/resources/local_centaur.conf"
 # All tests use ubuntu:latest - make sure it's there before starting the tests
@@ -88,3 +86,6 @@ LOCAL_CONF="$(pwd)/src/bin/travis/resources/local_centaur.conf"
 # (specifically output_redirection which expects a specific value in stderr)
 docker pull ubuntu:latest
 centaur/test_cromwell.sh -j"${CROMWELL_JAR}" -c${LOCAL_CONF}
+sbt coverageReport
+sbt coverageAggregate
+bash <(curl -s https://codecov.io/bash)

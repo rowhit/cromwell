@@ -31,12 +31,21 @@ task centaur {
         export SBT_OPTS=-Dsbt.ivy.home=/cromwell_root/tmp/.ivy2
         echo "current directory $PWD"
         git clone --branch=${centaur_branch} https://github.com/broadinstitute/cromwell.git
-        cromwell/centaur/test_cromwell.sh -j${cromwell_jar} -c${conf} -r/cromwell_root/cromwell -t${token} -elocaldockertest -p100 ${ "-i" + integration_tests_dir}
+
+        cd cromwell
+
+        centaur/test_cromwell.sh -j${cromwell_jar} -c${conf} -r/cromwell_root/cromwell -t${token} -elocaldockertest -p100 ${ "-i" + integration_tests_dir}
+        EXIT_CODE=$?
+        sbt coverageReport
+        sbt coverageAggregate
+        tar czf cromwell_target_dir.tgz target
+        exit $EXIT_CODE
     >>>
 
     output {
        File cromwell_log = "cromwell/logs/cromwell.log"
        File centaur_log_file = "cromwell/logs/centaur.log"
+       File cromwell_target_dir = "cromwell/cromwell_target_dir.tgz"
     }
 
     runtime {

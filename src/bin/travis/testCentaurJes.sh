@@ -118,7 +118,7 @@ gcloud -q \
     sed 's/[A-Za-z0-9._-]*@[A-Za-z0-9._-]*/REDACTED/g'
 
 echo "RUNNING TRAVIS CENTAUR"
-sbt assembly
+ENABLE_COVERAGE=true sbt assembly
 
 # This is some Travis goofiness. We want the feature branch in all cases, but Travis makes us jump through this hoop
 # depending on whether the build is for a PR or a push.
@@ -157,5 +157,14 @@ export CENTAUR_LOG_PATH="gs://cloud-cromwell-dev/cromwell_execution/travis/centa
 gsutil cp "${CENTAUR_LOG_PATH}" centaur.log || true
 cat centaur.log || true
 echo "More logs for this run are available at https://console.cloud.google.com/storage/browser/cloud-cromwell-dev/cromwell_execution/travis/centaur_workflow/${WORKFLOW_ID}/call-centaur/"
+
+# Grab the codecov results from GCS and generate the coverage report.
+export CROMWELL_TARGET_DIR_PATH="gs://cloud-cromwell-dev/cromwell_execution/travis/centaur_workflow/${WORKFLOW_ID}/call-centaur/cromwell/cromwell_target_dir.tgz"
+gsutil cp "${CROMWELL_TARGET_DIR_PATH}" cromwell_target_dir.tgz || true
+
+tar xzf cromwell_target_dir.tgz || true
+sbt coverageReport || true
+sbt coverageAggregate || true
+bash <(curl -s https://codecov.io/bash)
 
 exit "${EXIT_CODE}"
