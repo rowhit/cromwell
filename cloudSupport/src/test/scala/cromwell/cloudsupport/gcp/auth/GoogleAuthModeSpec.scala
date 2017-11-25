@@ -6,7 +6,7 @@ import java.util.Base64
 
 import com.google.api.client.http.{HttpHeaders, HttpResponseException}
 import com.google.auth.oauth2.GoogleCredentials
-import cromwell.core.WorkflowOptions
+import cromwell.cloudsupport.gcp.auth.GoogleAuthMode.OptionLookup
 import org.scalatest.Assertions._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.{FlatSpec, Matchers}
@@ -112,15 +112,7 @@ object GoogleAuthModeSpec {
     )
   }
 
-  lazy val refreshTokenOptions: WorkflowOptions = {
-    val json = toJson("refresh_token" -> "the_refresh_token")
-    WorkflowOptions.fromJsonString(json).get
-  }
-
-  lazy val userServiceAccountOptions: WorkflowOptions = {
-    val json = toJson("user_service_account_json" -> serviceAccountJsonContents)
-    WorkflowOptions.fromJsonString(json).get
-  }
-
-  lazy val emptyOptions: WorkflowOptions = WorkflowOptions.empty
+  lazy val refreshTokenOptions: OptionLookup = Map("refresh_token" -> "the_refresh_token")
+  lazy val userServiceAccountOptions: OptionLookup = Map("user_service_account_json" -> serviceAccountJsonContents)
+  lazy val emptyOptions: OptionLookup = Map.empty
 }
