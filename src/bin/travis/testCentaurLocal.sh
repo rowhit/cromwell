@@ -78,8 +78,6 @@ printTravisHeartbeat
 set -x
 set -e
 
-docker pull ubuntu:latest
-
 sbt assembly
 CROMWELL_JAR=$(find "$(pwd)/target/scala-2.12" -name "cromwell-*.jar")
 LOCAL_CONF="$(pwd)/src/bin/travis/resources/local_centaur.conf"

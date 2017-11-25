@@ -10,15 +10,18 @@ import centaur.api.CentaurCromwellClient.sendReceiveFutureCompletion
 import centaur.test.metadata.WorkflowMetadata
 import centaur.test.submit.SubmitHttpResponse
 import centaur.test.workflow.Workflow
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport
-import com.google.api.client.json.jackson2.JacksonFactory
 import com.google.api.services.genomics.Genomics
 import com.google.api.services.genomics.model.Operation
+import com.google.auth.Credentials
 import com.google.auth.http.HttpCredentialsAdapter
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.compute.{ComputeOptions, InstanceId}
+import com.google.cloud.compute.{Compute, ComputeOptions, InstanceId}
+import com.google.cloud.storage.{Storage, StorageOptions}
+import com.typesafe.config.Config
+import common.validation.Validation._
 import cromwell.api.CromwellClient.UnsuccessfulRequestException
 import cromwell.api.model.{Failed, SubmittedWorkflow, TerminalStatus, WorkflowStatus}
+import cromwell.cloudsupport.gcp.GoogleConfiguration
+import cromwell.cloudsupport.gcp.auth.GoogleAuthMode
 import spray.json.JsString
 
 import scala.annotation.tailrec
@@ -76,17 +79,33 @@ object Test {
   * be composed together via a for comprehension as a test formula and then run by some other entity.
   */
 object Operations {
-  lazy val jsonFactory = JacksonFactory.getDefaultInstance
-  lazy val httpTransport = GoogleNetHttpTransport.newTrustedTransport
-  lazy val genomics = new Genomics.Builder(
-    httpTransport,
-    jsonFactory,
-    new HttpCredentialsAdapter(GoogleCredentials.getApplicationDefault)
-  ).setApplicationName("centaur")
-    .setRootUrl("https://genomics.googleapis.com/")
-    .build()
+  lazy val configuration: GoogleConfiguration = GoogleConfiguration(CentaurConfig.conf)
+  lazy val googleConf: Config = CentaurConfig.conf.getConfig("google")
+  lazy val authName: String = googleConf.getString("auth")
+  lazy val genomicsEndpointUrl: String = googleConf.getString("genomics.endpoint-url")
+  lazy val credentials: Credentials = configuration.auth(authName).map(_.credential(Map.empty)).toTry.get
 
-  val compute = ComputeOptions.getDefaultInstance.getService
+  lazy val genomics: Genomics = {
+    val builder = new Genomics.Builder(
+      GoogleAuthMode.httpTransport,
+      GoogleAuthMode.jsonFactory,
+      new HttpCredentialsAdapter(credentials)
+    )
+    builder
+      .setApplicationName(configuration.applicationName)
+      .setRootUrl(genomicsEndpointUrl)
+      .build()
+  }
+
+  lazy val compute: Compute = {
+    val computeOptions = ComputeOptions.newBuilder().setCredentials(credentials).build()
+    computeOptions.getService
+  }
+
+  lazy val storage: Storage = {
+    val storageOptions = StorageOptions.newBuilder().setCredentials(credentials).build()
+    storageOptions.getService
+  }
 
   def submitWorkflow(workflow: Workflow): Test[SubmittedWorkflow] = {
     new Test[SubmittedWorkflow] {

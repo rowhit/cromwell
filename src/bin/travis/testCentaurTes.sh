@@ -31,8 +31,6 @@ printTravisHeartbeat
 set -x
 set -e
 
-docker pull ubuntu:latest
-
 WORKDIR=$(pwd)
 
 sbt assembly
